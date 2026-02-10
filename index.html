@@ -5,58 +5,368 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Calculadora de Investimento</title>
   <style>
-    body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 24px; max-width: 720px; }
-    h1 { margin-bottom: 8px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { display: block; font-size: 14px; margin-bottom: 6px; }
-    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 16px; }
-    .row { margin-top: 12px; }
-    button { padding: 12px 14px; border: 0; border-radius: 10px; font-size: 16px; cursor: pointer; }
-    .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
-    .result { margin-top: 14px; font-size: 18px; }
-    .note { color: #555; font-size: 13px; margin-top: 6px; }
-    .full { grid-column: 1 / -1; }
-    .error { color: #b00020; font-size: 14px; margin-top: 10px; }
+    :root{
+      --bg: #0b0c0f;
+      --card: rgba(255,255,255,0.08);
+      --card2: rgba(255,255,255,0.06);
+      --stroke: rgba(255,255,255,0.14);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.65);
+      --muted2: rgba(255,255,255,0.45);
+      --shadow: 0 20px 60px rgba(0,0,0,0.55);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background: radial-gradient(1000px 600px at 15% 10%, rgba(120,170,255,0.25), transparent 60%),
+                  radial-gradient(900px 600px at 85% 15%, rgba(255,120,200,0.18), transparent 60%),
+                  radial-gradient(900px 700px at 30% 95%, rgba(120,255,180,0.10), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Segoe UI, Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.35;
+    }
+
+    .wrap{
+      max-width: 1060px;
+      margin: 28px auto 60px;
+      padding: 0 18px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    h1{
+      margin:0;
+      font-size: 34px;
+      letter-spacing: -0.02em;
+    }
+
+    .sub{
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (min-width: 920px){
+      .grid{
+        grid-template-columns: 430px 1fr;
+        align-items: start;
+      }
+    }
+
+    .card{
+      border-radius: var(--radius);
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .cardInner{
+      padding: 16px;
+    }
+
+    .sectionTitle{
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin: 0 0 10px 0;
+    }
+
+    .formGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .full{ grid-column: 1 / -1; }
+
+    label{
+      display:block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input, select{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.20);
+      color: var(--text);
+      outline: none;
+      font-size: 16px;
+    }
+    input::placeholder{ color: rgba(255,255,255,0.35); }
+    input:focus, select:focus{
+      border-color: rgba(140,185,255,0.8);
+      box-shadow: 0 0 0 4px rgba(140,185,255,0.15);
+    }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin-top: 12px;
+    }
+
+    .btn{
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.10);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 15px;
+      cursor:pointer;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,0.14); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btnPrimary{
+      background: rgba(140,185,255,0.18);
+      border-color: rgba(140,185,255,0.35);
+    }
+    .btnPrimary:hover{ background: rgba(140,185,255,0.24); }
+
+    .error{
+      margin-top: 10px;
+      color: rgba(255,120,120,0.95);
+      font-size: 14px;
+      min-height: 18px;
+    }
+
+    .kpiRow{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (min-width: 520px){
+      .kpiRow{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .kpi{
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .kpi .label{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .kpi .value{
+      font-size: 20px;
+      letter-spacing: -0.01em;
+    }
+    .kpi .hint{
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted2);
+    }
+
+    .chartWrap{
+      padding: 16px;
+    }
+
+    canvas{
+      width: 100%;
+      height: 260px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      display:block;
+    }
+
+    .tableWrap{
+      margin-top: 14px;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.10);
+    }
+
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th{
+      text-align:left;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-weight: 600;
+      background: rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+    }
+
+    tbody td{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.86);
+      white-space: nowrap;
+    }
+
+    tbody tr:hover td{
+      background: rgba(255,255,255,0.04);
+    }
+
+    .right{ text-align:right; }
+    .muted{ color: var(--muted); }
+
+    .footerNote{
+      margin-top: 10px;
+      color: var(--muted2);
+      font-size: 12px;
+    }
   </style>
 </head>
+
 <body>
-  <h1>Calculadora de Investimento</h1>
-  <p class="note">Assumimos capitalização mensal e aporte no fim de cada mês.</p>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Calculadora de Investimento</h1>
+        <div class="sub">Simulador com histórico mensal, tabela e gráfico.</div>
+      </div>
+      <div class="pill" title="Rodando no seu navegador (GitHub Pages)">
+        <span>⚡</span>
+        <span>100% client-side</span>
+      </div>
+    </header>
 
-  <div class="card">
     <div class="grid">
-      <div>
-        <label for="patrimonioInicial">Patrimônio inicial (R$)</label>
-        <input id="patrimonioInicial" type="number" min="0" step="0.01" value="700000" />
+      <!-- LEFT: CONTROLS -->
+      <div class="card">
+        <div class="cardInner">
+          <div class="sectionTitle">Parâmetros</div>
+
+          <div class="formGrid">
+            <div class="full">
+              <label for="aporteTiming">Aporte</label>
+              <select id="aporteTiming">
+                <option value="fim" selected>No fim do mês</option>
+                <option value="inicio">No início do mês</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="patrimonioInicial">Patrimônio inicial (R$)</label>
+              <input id="patrimonioInicial" type="number" min="0" step="0.01" value="1000000" />
+            </div>
+
+            <div>
+              <label for="aporteMensal">Aporte mensal (R$)</label>
+              <input id="aporteMensal" type="number" min="0" step="0.01" value="6000" />
+            </div>
+
+            <div>
+              <label for="meses">Quantidade de meses</label>
+              <input id="meses" type="number" min="0" step="1" value="48" />
+            </div>
+
+            <div>
+              <label for="rentabilidadeAnual">Rentabilidade anual (%)</label>
+              <input id="rentabilidadeAnual" type="number" step="0.01" value="10" />
+            </div>
+
+            <div class="full actions">
+              <button class="btn btnPrimary" id="btnCalcular">Calcular</button>
+              <button class="btn" id="btnLimpar" type="button">Limpar</button>
+            </div>
+          </div>
+
+          <div id="erro" class="error" aria-live="polite"></div>
+
+          <div class="kpiRow">
+            <div class="kpi">
+              <div class="label">Patrimônio final</div>
+              <div class="value" id="kpiFinal">—</div>
+              <div class="hint" id="kpiHint">—</div>
+            </div>
+
+            <div class="kpi">
+              <div class="label">Rendimento acumulado</div>
+              <div class="value" id="kpiRendimento">—</div>
+              <div class="hint">Final - Aportes acumulados</div>
+            </div>
+          </div>
+
+          <div class="footerNote">
+            Observação: a rentabilidade é convertida para taxa mensal equivalente (composta).
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label for="aporteMensal">Aporte mensal (R$)</label>
-        <input id="aporteMensal" type="number" min="0" step="0.01" value="3000" />
+      <!-- RIGHT: CHART + TABLE -->
+      <div class="card">
+        <div class="chartWrap">
+          <div class="sectionTitle">Evolução do patrimônio</div>
+          <canvas id="chart" width="1000" height="320" aria-label="Gráfico do patrimônio ao longo do tempo"></canvas>
+
+          <div class="tableWrap" role="region" aria-label="Tabela de evolução mensal">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mês</th>
+                  <th class="right">Patrimônio</th>
+                  <th class="right">Aporte acumulado</th>
+                  <th class="right">Rendimento acumulado</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label for="meses">Quantidade de meses</label>
-        <input id="meses" type="number" min="0" step="1" value="60" />
-      </div>
-
-      <div>
-        <label for="rentabilidadeAnual">Rentabilidade anual (%)</label>
-        <input id="rentabilidadeAnual" type="number" step="0.01" value="10" />
-      </div>
-
-      <div class="full actions">
-        <button id="btnCalcular">Calcular</button>
-        <button id="btnLimpar" type="button">Limpar</button>
-      </div>
     </div>
-
-    <div id="erro" class="error" aria-live="polite"></div>
-    <div id="resultado" class="result" aria-live="polite"></div>
   </div>
 
   <script>
+    // ---------- helpers ----------
     function formatBRL(valor) {
       return new Intl.NumberFormat("pt-BR", {
         style: "currency",
@@ -66,8 +376,7 @@
     }
 
     function lerNumero(id) {
-      const el = document.getElementById(id);
-      return Number(el.value);
+      return Number(document.getElementById(id).value);
     }
 
     function validarEntradas(p0, aporte, meses, rentAnualPct) {
@@ -75,50 +384,238 @@
       if (!Number.isFinite(aporte) || aporte < 0) return "Aporte mensal inválido.";
       if (!Number.isFinite(meses) || meses < 0 || !Number.isInteger(meses)) return "Quantidade de meses inválida (use inteiro).";
       if (!Number.isFinite(rentAnualPct)) return "Rentabilidade anual inválida.";
-      // rentabilidade anual pode ser negativa (ano ruim), então não bloqueio por padrão
       return null;
     }
 
-    function calcularPatrimonioFinal(patrimonioInicial, aporteMensal, meses, rentabilidadeAnualPct) {
+    function taxaMensalEquivalente(rentabilidadeAnualPct) {
       const rAnual = rentabilidadeAnualPct / 100;
-
-      // taxa mensal equivalente (composta)
-      const taxaMensal = Math.pow(1 + rAnual, 1 / 12) - 1;
-
-      let patrimonio = patrimonioInicial;
-
-      for (let i = 0; i < meses; i++) {
-        // rende no mês
-        patrimonio = patrimonio * (1 + taxaMensal);
-
-        // aporte no fim do mês
-        patrimonio = patrimonio + aporteMensal;
-      }
-
-      return patrimonio;
+      // pode ser negativa; cuidado se rAnual <= -1 (quebraria)
+      if (rAnual <= -1) return null;
+      return Math.pow(1 + rAnual, 1/12) - 1;
     }
 
+    // ---------- core simulation ----------
+    // Retorna um array com o histórico mensal:
+    // { mes, patrimonio, aporteAcumulado, rendimentoAcumulado }
+    function simular(p0, aporteMensal, meses, rentAnualPct, aporteTiming) {
+      const taxaMensal = taxaMensalEquivalente(rentAnualPct);
+      if (taxaMensal === null) {
+        return { erro: "Rentabilidade anual muito baixa (<= -100%).", historico: [] };
+      }
+
+      let patrimonio = p0;
+      let aporteAcumulado = 0;
+
+      const historico = [];
+
+      for (let mes = 1; mes <= meses; mes++) {
+        // regra: aporte no início ou no fim
+        if (aporteTiming === "inicio") {
+          patrimonio += aporteMensal;
+          aporteAcumulado += aporteMensal;
+        }
+
+        // rendimento do mês
+        patrimonio *= (1 + taxaMensal);
+
+        if (aporteTiming === "fim") {
+          patrimonio += aporteMensal;
+          aporteAcumulado += aporteMensal;
+        }
+
+        const rendimentoAcumulado = patrimonio - p0 - aporteAcumulado;
+
+        historico.push({
+          mes,
+          patrimonio,
+          aporteAcumulado,
+          rendimentoAcumulado
+        });
+      }
+
+      return { erro: null, taxaMensal, historico };
+    }
+
+    // ---------- render table ----------
+    function renderTabela(historico) {
+      const tbody = document.getElementById("tbody");
+      tbody.innerHTML = "";
+
+      // se meses for grande, você pode limitar, mas por enquanto vamos mostrar tudo
+      for (const row of historico) {
+        const tr = document.createElement("tr");
+
+        const tdMes = document.createElement("td");
+        tdMes.textContent = String(row.mes);
+        tdMes.className = "muted";
+
+        const tdPat = document.createElement("td");
+        tdPat.textContent = formatBRL(row.patrimonio);
+        tdPat.className = "right";
+
+        const tdAporte = document.createElement("td");
+        tdAporte.textContent = formatBRL(row.aporteAcumulado);
+        tdAporte.className = "right";
+
+        const tdRend = document.createElement("td");
+        tdRend.textContent = formatBRL(row.rendimentoAcumulado);
+        tdRend.className = "right";
+
+        tr.appendChild(tdMes);
+        tr.appendChild(tdPat);
+        tr.appendChild(tdAporte);
+        tr.appendChild(tdRend);
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    // ---------- chart (canvas, no libs) ----------
+    function drawChart(historico) {
+      const canvas = document.getElementById("chart");
+      const ctx = canvas.getContext("2d");
+
+      const W = canvas.width;
+      const H = canvas.height;
+
+      // clear
+      ctx.clearRect(0, 0, W, H);
+
+      if (!historico.length) return;
+
+      // padding
+      const padL = 60;
+      const padR = 18;
+      const padT = 18;
+      const padB = 34;
+
+      const xs = historico.map(r => r.mes);
+      const ys = historico.map(r => r.patrimonio);
+
+      const xMin = 1;
+      const xMax = xs[xs.length - 1];
+      const yMin = Math.min(...ys);
+      const yMax = Math.max(...ys);
+
+      const xToPx = (x) => padL + ( (x - xMin) / (xMax - xMin || 1) ) * (W - padL - padR);
+      const yToPx = (y) => padT + (1 - ( (y - yMin) / (yMax - yMin || 1) )) * (H - padT - padB);
+
+      // background grid
+      ctx.save();
+      ctx.globalAlpha = 1;
+
+      // subtle border already via CSS, so just grid lines
+      ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      ctx.lineWidth = 1;
+
+      const gridY = 4;
+      for (let i = 0; i <= gridY; i++){
+        const y = padT + (i / gridY) * (H - padT - padB);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(W - padR, y);
+        ctx.stroke();
+      }
+
+      const gridX = 6;
+      for (let i = 0; i <= gridX; i++){
+        const x = padL + (i / gridX) * (W - padL - padR);
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, H - padB);
+        ctx.stroke();
+      }
+
+      // axis labels
+      ctx.fillStyle = "rgba(255,255,255,0.60)";
+      ctx.font = "12px system-ui, -apple-system, Arial";
+
+      // y labels (min/max and mid)
+      const yLabels = [yMax, (yMax + yMin)/2, yMin];
+      for (const val of yLabels){
+        const y = yToPx(val);
+        ctx.fillText(formatBRL(val), 10, y + 4);
+      }
+
+      // x labels (0%, 50%, 100%)
+      const xLabels = [1, Math.round((1 + xMax)/2), xMax];
+      for (const val of xLabels){
+        const x = xToPx(val);
+        ctx.fillText(`m${val}`, x - 10, H - 10);
+      }
+
+      // line path
+      ctx.strokeStyle = "rgba(140,185,255,0.95)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      historico.forEach((r, idx) => {
+        const x = xToPx(r.mes);
+        const y = yToPx(r.patrimonio);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // last point
+      const last = historico[historico.length - 1];
+      ctx.fillStyle = "rgba(140,185,255,0.95)";
+      ctx.beginPath();
+      ctx.arc(xToPx(last.mes), yToPx(last.patrimonio), 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ---------- main ----------
     function onCalcular() {
       const p0 = lerNumero("patrimonioInicial");
       const aporte = lerNumero("aporteMensal");
       const meses = lerNumero("meses");
       const rentPct = lerNumero("rentabilidadeAnual");
+      const aporteTiming = document.getElementById("aporteTiming").value;
 
       const erro = validarEntradas(p0, aporte, meses, rentPct);
       const erroEl = document.getElementById("erro");
-      const resultadoEl = document.getElementById("resultado");
-
       erroEl.textContent = "";
-      resultadoEl.textContent = "";
 
       if (erro) {
         erroEl.textContent = erro;
+        document.getElementById("kpiFinal").textContent = "—";
+        document.getElementById("kpiRendimento").textContent = "—";
+        document.getElementById("kpiHint").textContent = "—";
+        renderTabela([]);
+        drawChart([]);
         return;
       }
 
-      const final = calcularPatrimonioFinal(p0, aporte, meses, rentPct);
+      const { erro: erroSim, taxaMensal, historico } = simular(p0, aporte, meses, rentPct, aporteTiming);
+      if (erroSim) {
+        erroEl.textContent = erroSim;
+        return;
+      }
 
-      resultadoEl.textContent = `Patrimônio final: ${formatBRL(final)}`;
+      const ultimo = historico[historico.length - 1] || null;
+
+      if (!ultimo) {
+        document.getElementById("kpiFinal").textContent = formatBRL(p0);
+        document.getElementById("kpiRendimento").textContent = formatBRL(0);
+        document.getElementById("kpiHint").textContent = `Taxa mensal: ${((taxaMensal||0)*100).toFixed(3)}%`;
+        renderTabela([]);
+        drawChart([]);
+        return;
+      }
+
+      const patrimonioFinal = ultimo.patrimonio;
+      const aporteAcum = ultimo.aporteAcumulado;
+      const rendimentoAcum = ultimo.rendimentoAcumulado;
+
+      document.getElementById("kpiFinal").textContent = formatBRL(patrimonioFinal);
+      document.getElementById("kpiRendimento").textContent = formatBRL(rendimentoAcum);
+      document.getElementById("kpiHint").textContent =
+        `Aportes: ${formatBRL(aporteAcum)} · Taxa mensal: ${(taxaMensal*100).toFixed(3)}% · Aporte: ${aporteTiming === "inicio" ? "início" : "fim"}`;
+
+      renderTabela(historico);
+      drawChart(historico);
     }
 
     function onLimpar() {
@@ -126,22 +623,31 @@
       document.getElementById("aporteMensal").value = "";
       document.getElementById("meses").value = "";
       document.getElementById("rentabilidadeAnual").value = "";
+      document.getElementById("aporteTiming").value = "fim";
       document.getElementById("erro").textContent = "";
-      document.getElementById("resultado").textContent = "";
+      document.getElementById("kpiFinal").textContent = "—";
+      document.getElementById("kpiRendimento").textContent = "—";
+      document.getElementById("kpiHint").textContent = "—";
+      document.getElementById("tbody").innerHTML = "";
+      drawChart([]);
     }
 
     document.getElementById("btnCalcular").addEventListener("click", onCalcular);
     document.getElementById("btnLimpar").addEventListener("click", onLimpar);
 
-    // calcula ao apertar Enter em qualquer campo
+    // calcular ao apertar Enter
     ["patrimonioInicial","aporteMensal","meses","rentabilidadeAnual"].forEach(id => {
       document.getElementById(id).addEventListener("keydown", (e) => {
         if (e.key === "Enter") onCalcular();
       });
     });
 
-    // cálculo inicial com valores padrão
+    // atualizar ao trocar timing
+    document.getElementById("aporteTiming").addEventListener("change", onCalcular);
+
+    // cálculo inicial
     onCalcular();
   </script>
 </body>
 </html>
+
