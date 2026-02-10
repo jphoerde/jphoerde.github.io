@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculadora de Investimento</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; margin: 24px; max-width: 720px; }
+    h1 { margin-bottom: 8px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display: block; font-size: 14px; margin-bottom: 6px; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 16px; }
+    .row { margin-top: 12px; }
+    button { padding: 12px 14px; border: 0; border-radius: 10px; font-size: 16px; cursor: pointer; }
+    .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+    .result { margin-top: 14px; font-size: 18px; }
+    .note { color: #555; font-size: 13px; margin-top: 6px; }
+    .full { grid-column: 1 / -1; }
+    .error { color: #b00020; font-size: 14px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Calculadora de Investimento</h1>
+  <p class="note">Assumimos capitalização mensal e aporte no fim de cada mês.</p>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label for="patrimonioInicial">Patrimônio inicial (R$)</label>
+        <input id="patrimonioInicial" type="number" min="0" step="0.01" value="700000" />
+      </div>
+
+      <div>
+        <label for="aporteMensal">Aporte mensal (R$)</label>
+        <input id="aporteMensal" type="number" min="0" step="0.01" value="3000" />
+      </div>
+
+      <div>
+        <label for="meses">Quantidade de meses</label>
+        <input id="meses" type="number" min="0" step="1" value="60" />
+      </div>
+
+      <div>
+        <label for="rentabilidadeAnual">Rentabilidade anual (%)</label>
+        <input id="rentabilidadeAnual" type="number" step="0.01" value="10" />
+      </div>
+
+      <div class="full actions">
+        <button id="btnCalcular">Calcular</button>
+        <button id="btnLimpar" type="button">Limpar</button>
+      </div>
+    </div>
+
+    <div id="erro" class="error" aria-live="polite"></div>
+    <div id="resultado" class="result" aria-live="polite"></div>
+  </div>
+
+  <script>
+    function formatBRL(valor) {
+      return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 2
+      }).format(valor);
+    }
+
+    function lerNumero(id) {
+      const el = document.getElementById(id);
+      return Number(el.value);
+    }
+
+    function validarEntradas(p0, aporte, meses, rentAnualPct) {
+      if (!Number.isFinite(p0) || p0 < 0) return "Patrimônio inicial inválido.";
+      if (!Number.isFinite(aporte) || aporte < 0) return "Aporte mensal inválido.";
+      if (!Number.isFinite(meses) || meses < 0 || !Number.isInteger(meses)) return "Quantidade de meses inválida (use inteiro).";
+      if (!Number.isFinite(rentAnualPct)) return "Rentabilidade anual inválida.";
+      // rentabilidade anual pode ser negativa (ano ruim), então não bloqueio por padrão
+      return null;
+    }
+
+    function calcularPatrimonioFinal(patrimonioInicial, aporteMensal, meses, rentabilidadeAnualPct) {
+      const rAnual = rentabilidadeAnualPct / 100;
+
+      // taxa mensal equivalente (composta)
+      const taxaMensal = Math.pow(1 + rAnual, 1 / 12) - 1;
+
+      let patrimonio = patrimonioInicial;
+
+      for (let i = 0; i < meses; i++) {
+        // rende no mês
+        patrimonio = patrimonio * (1 + taxaMensal);
+
+        // aporte no fim do mês
+        patrimonio = patrimonio + aporteMensal;
+      }
+
+      return patrimonio;
+    }
+
+    function onCalcular() {
+      const p0 = lerNumero("patrimonioInicial");
+      const aporte = lerNumero("aporteMensal");
+      const meses = lerNumero("meses");
+      const rentPct = lerNumero("rentabilidadeAnual");
+
+      const erro = validarEntradas(p0, aporte, meses, rentPct);
+      const erroEl = document.getElementById("erro");
+      const resultadoEl = document.getElementById("resultado");
+
+      erroEl.textContent = "";
+      resultadoEl.textContent = "";
+
+      if (erro) {
+        erroEl.textContent = erro;
+        return;
+      }
+
+      const final = calcularPatrimonioFinal(p0, aporte, meses, rentPct);
+
+      resultadoEl.textContent = `Patrimônio final: ${formatBRL(final)}`;
+    }
+
+    function onLimpar() {
+      document.getElementById("patrimonioInicial").value = "";
+      document.getElementById("aporteMensal").value = "";
+      document.getElementById("meses").value = "";
+      document.getElementById("rentabilidadeAnual").value = "";
+      document.getElementById("erro").textContent = "";
+      document.getElementById("resultado").textContent = "";
+    }
+
+    document.getElementById("btnCalcular").addEventListener("click", onCalcular);
+    document.getElementById("btnLimpar").addEventListener("click", onLimpar);
+
+    // calcula ao apertar Enter em qualquer campo
+    ["patrimonioInicial","aporteMensal","meses","rentabilidadeAnual"].forEach(id => {
+      document.getElementById(id).addEventListener("keydown", (e) => {
+        if (e.key === "Enter") onCalcular();
+      });
+    });
+
+    // cálculo inicial com valores padrão
+    onCalcular();
+  </script>
+</body>
+</html>
